@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import { packages, services, waLink } from "@/data/site";
@@ -27,7 +27,7 @@ export function EnquiryForm({ full = true, defaultPackage = "" }: { full?: boole
   const [done, setDone] = useState<Record<string, string> | null>(null);
   const today = new Date().toISOString().slice(0, 10);
 
-  function submit(e: React.FormEvent<HTMLFormElement>) {
+  function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     const r = schema.safeParse(data);
@@ -56,20 +56,12 @@ export function EnquiryForm({ full = true, defaultPackage = "" }: { full?: boole
     );
   }
 
-  const F = ({ name, label, children }: { name: string; label: string; children: React.ReactNode }) => (
-    <label className="block">
-      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
-      {children}
-      {errors[name] && <span className="mt-1 block text-xs text-destructive">{errors[name]}</span>}
-    </label>
-  );
-
   return (
     <form onSubmit={submit} className="grid gap-8 sm:grid-cols-2" noValidate>
-      <F name="name" label="Full name *"><input name="name" className="field" maxLength={100} /></F>
-      <F name="phone" label="Phone *"><input name="phone" type="tel" className="field" maxLength={16} /></F>
-      <F name="email" label="Email *"><input name="email" type="email" className="field" maxLength={255} /></F>
-      <F name="service" label="Service">
+      <F errors={errors} name="name" label="Full name *"><input name="name" className="field" maxLength={100} /></F>
+      <F errors={errors} name="phone" label="Phone *"><input name="phone" type="tel" className="field" maxLength={16} /></F>
+      <F errors={errors} name="email" label="Email *"><input name="email" type="email" className="field" maxLength={255} /></F>
+      <F errors={errors} name="service" label="Service">
         <select name="service" className="field" defaultValue="">
           <option value="">Select a service</option>
           {services.map((s) => <option key={s.title}>{s.title}</option>)}
@@ -77,9 +69,9 @@ export function EnquiryForm({ full = true, defaultPackage = "" }: { full?: boole
       </F>
       {full && (
         <>
-          <F name="date" label="Event date"><input name="date" type="date" min={today} className="field" /></F>
-          <F name="location" label="Event location"><input name="location" className="field" maxLength={150} placeholder="Venue, city" /></F>
-          <F name="package" label="Package">
+          <F errors={errors} name="date" label="Event date"><input name="date" type="date" min={today} className="field" /></F>
+          <F errors={errors} name="location" label="Event location"><input name="location" className="field" maxLength={150} placeholder="Venue, city" /></F>
+          <F errors={errors} name="package" label="Package">
             <select name="package" className="field" defaultValue={defaultPackage}>
               <option value="">Not sure yet</option>
               {packages.map((p) => <option key={p.name}>{p.name}</option>)}
@@ -88,12 +80,22 @@ export function EnquiryForm({ full = true, defaultPackage = "" }: { full?: boole
         </>
       )}
       <div className="sm:col-span-2">
-        <F name="message" label="Your story"><textarea name="message" rows={4} className="field resize-none" maxLength={1000} /></F>
+        <F errors={errors} name="message" label="Your story"><textarea name="message" rows={4} className="field resize-none" maxLength={1000} /></F>
       </div>
       <div className="flex flex-wrap gap-4 sm:col-span-2">
         <button type="submit" className="btn-gold">{full ? "Check Availability" : "Send Message"}</button>
         <a href={waLink()} target="_blank" rel="noreferrer" className="btn-ghost"><MessageCircle className="h-4 w-4" />Enquire on WhatsApp</a>
       </div>
     </form>
+  );
+}
+
+function F({ name, label, errors, children }: { name: string; label: string; errors: Record<string, string>; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
+      {children}
+      {errors[name] && <span className="mt-1 block text-xs text-destructive">{errors[name]}</span>}
+    </label>
   );
 }
